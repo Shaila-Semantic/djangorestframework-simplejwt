@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 from .models import TokenUser
 from .settings import api_settings
 from .tokens import RefreshToken, SlidingToken, Token, UntypedToken
-from users.models import Profile
+from users.models import Profile, OrgMaster
 
 AuthUser = TypeVar("AuthUser", AbstractBaseUser, TokenUser)
 
@@ -69,6 +69,7 @@ class TokenObtainSerializer(serializers.Serializer):
         token["user_id"] = user.id
         token["org_id"] = Profile.objects.filter(user=user).values_list('org_id', flat=True).first()
         token["short_name"] = Profile.objects.filter(user=user).values_list('short_name', flat=True).first()
+        token["org_name"] = OrgMaster.objects.filter(org_id=Profile.objects.filter(user=user).values_list('org_id', flat=True).first()).values_list('org_name', flat=True).first()
         token["email"] = user.email
         return token
 
@@ -84,6 +85,7 @@ class TokenObtainPairSerializer(TokenObtainSerializer):
         data["user_id"] = self.user.id
         data["org_id"] = Profile.objects.filter(user=self.user).values_list('org_id', flat=True).first()
         data["short_name"] = Profile.objects.filter(user=self.user).values_list('short_name', flat=True).first()
+        data["org_name"] = OrgMaster.objects.filter(org_id=Profile.objects.filter(user=self.user).values_list('org_id', flat=True).first()).values_list('org_name', flat=True).first()
         data["is_superuser"] = self.user.is_superuser
         if api_settings.UPDATE_LAST_LOGIN:
             update_last_login(None, self.user)
